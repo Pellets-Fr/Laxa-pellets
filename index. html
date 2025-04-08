@@ -1,1 +1,37 @@
 
+<section id="products">
+    <h2>Nos produits</h2>
+
+    <div class="product">
+        <h3>Copeaux de bois (Flake Shaving)</h3>
+        <p><strong>Description :</strong> Copeaux de bois de haute qualité produits à partir de bois blanc (sapin et épicéa). Séchés à haute température pour garantir qu'ils soient exempts de bactéries et de moisissures.</p>
+        <p><strong>Caractéristiques :</strong></p>
+        <ul>
+            <li>Structure fine (5-20 mm), doux et agréable au toucher, idéal pour le confort des chevaux.</li>
+            <li>Produit presque sans poussière, grâce à une ligne de production de haute technologie.</li>
+            <li>Adapté pour l'écurie, absorbant efficacement l'humidité et les odeurs.</li>
+            <li>Sac de 14 kg pour une manipulation facile.</li>
+            <li>Production annuelle : 1 million de sacs.</li>
+        </ul>
+        <a href="https://www.laxapellets.se" target="_blank">Découvrez notre Flake Shaving</a>
+        <br><br>
+        <!-- Assure-toi que tu as téléchargé l'image dans le bon dossier dans ton dépôt -->
+        <img src="images/copeaux.jpg" alt="Copeaux de bois" class="product-image">
+    </div>
+
+    <div class="product">
+        <h3>Sciure de bois (Sawdust)</h3>
+        <p><strong>Description :</strong> Sciure de bois ultra-fine provenant de bois blanc (sapin et épicéa). Idéale pour l'absorption de l'humidité et des odeurs. Traitée à haute température pour garantir sa pureté.</p>
+        <p><strong>Caractéristiques :</strong></p>
+        <ul>
+            <li>Produit fini entre 1 et 3 mm avec une capacité d'absorption maximale.</li>
+            <li>Facilité de nettoyage des boxes grâce à sa finesse.</li>
+            <li>Sac de 19 kg pour une manipulation facile.</li>
+            <li>Production annuelle : 500 000 sacs.</li>
+        </ul>
+        <a href="https://www.laxapellets.se" target="_blank">Découvrez notre Sawdust</a>
+        <br><br>
+        <!-- Assure-toi que tu as téléchargé l'image dans le bon dossier dans ton dépôt -->
+        <img src="images/sciure.jpg" alt="Sciure de bois" class="product-image">
+    </div>
+</section>
