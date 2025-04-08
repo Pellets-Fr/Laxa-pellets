@@ -1,4 +1,3 @@
-
 <section id="products">
     <h2>Nos produits</h2>
 
@@ -14,9 +13,6 @@
             <li>Production annuelle : 1 million de sacs.</li>
         </ul>
         <a href="https://www.laxapellets.se" target="_blank">Découvrez notre Flake Shaving</a>
-        <br><br>
-        <!-- Assure-toi que tu as téléchargé l'image dans le bon dossier dans ton dépôt -->
-        <img src="images/copeaux.jpg" alt="Copeaux de bois" class="product-image">
     </div>
 
     <div class="product">
@@ -30,8 +26,5 @@
             <li>Production annuelle : 500 000 sacs.</li>
         </ul>
         <a href="https://www.laxapellets.se" target="_blank">Découvrez notre Sawdust</a>
-        <br><br>
-        <!-- Assure-toi que tu as téléchargé l'image dans le bon dossier dans ton dépôt -->
-        <img src="images/sciure.jpg" alt="Sciure de bois" class="product-image">
     </div>
 </section>
