@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Sonic School V25 - Ultra</title>
+<style>
+body{margin:0;font-family:Arial Black;background:#000;color:#fff;text-align:center;overflow:hidden;user-select:none;touch-action:none}
+.screen{display:none;position:absolute;width:100%;height:100vh;align-items:center;justify-content:center;flex-direction:column;transition:0.5s}
+.active{display:flex}
+
+/* ZONES DYNAMIQUES */
+.zone1{background:linear-gradient(#4facfe,#00f2fe)}
+.zone2{background:linear-gradient(#6a11cb,#2575fc)}
+.boss{background:radial-gradient(circle,#900,#000);animation:danger 1s infinite alternate}
+.awakening{background:radial-gradient(circle,#f0f,#000);animation:glitch 0.2s infinite}
+
+@keyframes danger{from{filter:brightness(1)}to{filter:brightness(1.5)}}
+@keyframes glitch{0%{transform:translate(2px)} 50%{transform:translate(-2px);filter:hue-rotate(90deg)} 100%{transform:translate(0)}}
+
+/* HERO & FX */
+#hero{width:140px;animation:float 2s ease-in-out infinite;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5));transition:0.2s}
+@keyframes float{50%{transform:translateY(-15px)}}
+.flash{animation:flash .2s}
+.shake{animation:shake .25s}
+@keyframes flash{50%{transform:scale(1.3);filter:brightness(2.5)}}
+@keyframes shake{25%{transform:translateX(-10px)}50%{transform:translateX(10px)}}
+
+/* UI & HUD */
+.hud{position:absolute;top:env(safe-area-inset-top, 20px);width:100%;display:flex;justify-content:space-around;font-size:18px;font-weight:bold;text-shadow:2px 2px #000;z-index:100}
+.option{background:#fff;color:#000;padding:20px;margin:8px;border-radius:18px;font-size:32px;border:none;box-shadow:0 6px #aaa;width:145px;transition:0.1s}
+.option:active{transform:translateY(4px);box-shadow:none}
+
+/* PROGRESSION */
+.xp{position:absolute;bottom:0;width:100%;height:12px;background:rgba(255,255,255,.2)}
+#xpFill{height:100%;width:0%;background:#2ecc71;transition:.3s;box-shadow:0 0 15px #2ecc71}
+#bossBar{position:absolute;top:0;width:100%;height:15px;background:rgba(255,0,0,0.3);display:none;z-index:200}
+#bossHp{height:100%;width:100%;background:red;transition:.3s;box-shadow:0 0 20px red}
+
+/* GRID SELECTION */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:20px}
+.char{background:rgba(255,255,255,0.1);padding:12px;border-radius:20px;cursor:pointer;transition:0.2s;border:2px solid transparent}
+.char:active{transform:scale(0.9);background:rgba(255,255,255,0.3)}
+.char img{width:75px}
+</style>
+</head>
+<body>
+
+<div id="select" class="screen active" style="background:#0b1f3a">
+    <h1 style="color:yellow;font-size:38px;text-shadow:4px 4px red">SONIC SCHOOL V25</h1>
+    <p style="font-size:14px;letter-spacing:2px">ÉDITION ULTRA - AZIZ</p>
+    <div class="grid">
+        <div class="char" onclick="start('sonic')"><img src="https://upload.wikimedia.org/wikipedia/en/5/5f/Sonic_the_Hedgehog.png"><p>Sonic</p></div>
+        <div class="char" onclick="start('shadow')"><img src="https://upload.wikimedia.org/wikipedia/en/0/0c/Shadow_the_Hedgehog.png"><p>Shadow</p></div>
+        <div class="char" onclick="start('tails')"><img src="https://upload.wikimedia.org/wikipedia/en/e/e1/Miles_%22Tails%22_Prower.png"><p>Tails</p></div>
+        <div class="char" onclick="start('knuckles')"><img src="https://upload.wikimedia.org/wikipedia/en/9/96/Knuckles_the_Echidna.png"><p>Knuckles</p></div>
+        <div class="char" onclick="start('amy')"><img src="https://upload.wikimedia.org/wikipedia/en/c/ce/Amy_Rose_Sonic_the_Hedgehog.png"><p>Amy</p></div>
+    </div>
+</div>
+
+<div id="game" class="screen zone1">
+    <div id="bossBar"><div id="bossHp"></div></div>
+    <div class="hud">
+        ❤️ <span id="hp">3</span> | 🪙 <span id="score">0</span> | 🔥 <span id="combo">0</span> | ⭐ <span id="lvl">1</span>
+    </div>
+    <img id="hero">
+    <div id="q" style="font-size:55px;margin:25px;font-weight:bold;min-height:70px"></div>
+    <div id="options" style="display:grid;grid-template-columns:1fr 1fr"></div>
+    <div class="xp"><div id="xpFill"></div></div>
+</div>
+
+<script>
+/* --- CONFIG & STATE --- */
+let hp=3, score=0, combo=0, xp=0, lvl=1;
+let ans=null, hero="sonic", boss=false, bHp=100, phase=1, smartDiff=0;
+
+const H = {
+    sonic: {p:1.2, r:1.2, img:"https://upload.wikimedia.org/wikipedia/en/5/5f/Sonic_the_Hedgehog.png"},
+    shadow: {p:0.7, r:0.9, img:"https://upload.wikimedia.org/wikipedia/en/0/0c/Shadow_the_Hedgehog.png"},
+    tails: {p:1.5, r:1.1, img:"https://upload.wikimedia.org/wikipedia/en/e/e1/Miles_%22Tails%22_Prower.png"},
+    knuckles: {p:0.8, r:1.0, img:"https://upload.wikimedia.org/wikipedia/en/9/96/Knuckles_the_Echidna.png"},
+    amy: {p:1.4, r:1.1, img:"https://upload.wikimedia.org/wikipedia/en/c/ce/Amy_Rose_Sonic_the_Hedgehog.png"}
+};
+
+/* --- MOBILE POWER --- */
+function vibrate(ms){ if(navigator.vibrate) navigator.vibrate(ms); }
+
+function speak(t){
+    speechSynthesis.cancel();
+    let u=new SpeechSynthesisUtterance(t);
+    u.lang="fr-FR"; u.pitch=H[hero].p; u.rate=H[hero].r;
+    speechSynthesis.speak(u);
+}
+
+function start(h){
+    hero=h;
+    document.getElementById("hero").src=H[h].img;
+    document.getElementById("select").classList.remove("active");
+    document.getElementById("game").classList.add("active");
+    vibrate([50, 50, 50]);
+    speak("Système Ultra activé. Bonne chance Aziz !");
+    next();
+}
+
+/* --- IA ADAPTATIVE --- */
+function next(){
+    updateWorld();
+    // Difficulté qui s'ajuste selon lvl + smartDiff (bonus si Aziz est trop fort)
+    let range = boss ? (30 + phase*10) : (lvl * 5 + 5 + smartDiff);
+    let a=Math.floor(Math.random()*range), b=Math.floor(Math.random()*range);
+    ans=a+b;
+
+    let qText = a+" + "+b;
+    if(phase===2) qText = "RAGE: "+qText;
+    if(phase===3) qText = "AWAKENING: "+qText;
+    document.getElementById("q").innerText = qText;
+
+    let opts=new Set([ans]);
+    while(opts.size<4){
+        let offset = Math.floor(Math.random()*11)-5; // Équilibrage stable (-5 à +5)
+        if(offset !== 0) opts.add(ans + offset);
+    }
+    render([...opts]);
+}
+
+function render(arr){
+    let c=document.getElementById("options"); c.innerHTML="";
+    arr.sort(()=>Math.random()-0.5).forEach(v=>{
+        let d=document.createElement("button");
+        d.className="option"; d.innerText=Math.abs(v);
+        d.onclick=()=>check(v); c.appendChild(d);
+    });
+}
+
+/* --- BOSS 3 PHASES & ENGINE --- */
+function check(v){
+    let hEl=document.getElementById("hero");
+    hEl.classList.remove("flash","shake");
+
+    if(v===ans){
+        score++; combo++; xp+=20; smartDiff++;
+        hEl.classList.add("flash");
+        vibrate(30);
+
+        if(boss){
+            bHp -= (phase===3?15:20);
+            document.getElementById("bossHp").style.width=bHp+"%";
+
+            if(bHp <= 60 && phase === 1) { phase=2; speak("Shadow entre en mode Rage !"); }
+            if(bHp <= 30 && phase === 2) { phase=3; speak("Attention ! Shadow Awakening !"); }
+            if(bHp <= 0) return victory();
+        }
+
+        speak(combo>=3 ? "Combo X"+combo : "Bien !");
+        if(xp>=100){ xp=0; lvl++; speak("Niveau supérieur !"); }
+        if(score>=10 && !boss){ boss=true; document.getElementById("bossBar").style.display="block"; speak("Shadow arrive !"); }
+
+        updateUI();
+        setTimeout(next, 500);
+    } else {
+        hp--; combo=0; smartDiff = Math.max(0, smartDiff-2); // IA: On baisse la difficulté si erreur
+        hEl.classList.add("shake");
+        vibrate(200);
+        speak(hero==="shadow"?"Inutile !":"Raté !");
+        if(hp<=0) return gameOver();
+        updateUI();
+    }
+}
+
+function updateWorld(){
+    let g=document.getElementById("game");
+    g.classList.remove("zone1","zone2","boss","awakening");
+    if(phase===3) g.classList.add("awakening");
+    else if(boss) g.classList.add("boss");
+    else if(lvl>2) g.classList.add("zone2");
+    else g.classList.add("zone1");
+}
+
+function updateUI(){
+    document.getElementById("hp").innerText=hp;
+    document.getElementById("score").innerText=score;
+    document.getElementById("combo").innerText=combo;
+    document.getElementById("lvl").innerText=lvl;
+    document.getElementById("xpFill").style.width=xp+"%";
+}
+
+function victory(){
+    document.body.innerHTML=`<div class='screen active zone2'><h1>🏆 VICTOIRE</h1><p>Aziz a vaincu Shadow !</p><button onclick='location.reload()' style='padding:20px;border-radius:15px;font-size:24px'>REJOUER</button></div>`;
+    speak("Félicitations Aziz ! Tu es le champion ultime !");
+}
+
+function gameOver(){
+    document.body.innerHTML=`<div class='screen active' style='background:#000'><h1>💀 GAME OVER</h1><button onclick='location.reload()' style='padding:20px;border-radius:15px;font-size:24px'>REESSAYER</button></div>`;
+    speak("Shadow a gagné... On réessaie ?");
+}
+</script>
+</body>
+</html>
