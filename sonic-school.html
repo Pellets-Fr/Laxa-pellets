@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sonic School V8 - Aziz Edition</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlNvbmljIFNjaG9vbCIsCiAgInNob3J0X25hbWUiOiAiU29uaWMiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBiMWYzYSIsCiAgInRoZW1lX2NvbG9yIjogIiM0MmE1ZjUiCn0=">
+    <style>
+        :root {
+            --ghz: linear-gradient(#42a5f5, #90caf9);
+            --cpz: linear-gradient(#311b92, #512da8);
+            --dez: radial-gradient(circle, #212121, #000);
+            --gold: #f1c40f;
+        }
+
+        body {
+            margin: 0; font-family: 'Arial Black', sans-serif;
+            background: #0b1f3a; color: #fff; overflow: hidden;
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; transition: transform 0.4s ease-in-out; }
+        .active { display: flex; }
+
+        /* ZONES */
+        .zone-1 { background: var(--ghz); }
+        .zone-2 { background: var(--cpz); }
+        .zone-5 { background: var(--dez); }
+
+        /* HUD & XP */
+        .hud { position: absolute; top: 40px; width: 90%; display: flex; justify-content: space-between; font-size: 24px; z-index: 100; text-shadow: 2px 2px #000; }
+        .xp-container { position: absolute; bottom: 0; width: 100%; height: 12px; background: rgba(0,0,0,0.4); }
+        #xp-bar { width: 0%; height: 100%; background: #2ecc71; transition: width 0.5s cubic-bezier(0.1, 0.7, 1, 0.1); box-shadow: 0 0 15px #2ecc71; }
+
+        /* COMBO DISPLAY */
+        #combo-badge { position: absolute; top: 80px; color: #ff3f3f; font-size: 32px; opacity: 0; transform: scale(0.5); transition: 0.3s; font-style: italic; }
+        .combo-active { opacity: 1 !important; transform: scale(1.2) !important; animation: pulse 0.5s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1.1); } to { transform: scale(1.3); } }
+
+        /* AVATAR & FX */
+        #main-hero { width: 140px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); transition: 0.2s; }
+        .jumping { animation: sonicJump 0.6s cubic-bezier(0.25, 1, 0.5, 1); }
+        @keyframes sonicJump {
+            0% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-200px) rotate(360deg); }
+            100% { transform: translateY(0) rotate(720deg); }
+        }
+
+        /* UI BUTTONS */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 90%; max-width: 450px; }
+        .option {
+            background: #fff; color: #000; padding: 25px; border-radius: 20px;
+            font-size: 36px; font-weight: bold; text-align: center; cursor: pointer;
+            box-shadow: 0 8px 0 #bbb; transition: 0.1s; border: none;
+        }
+        .option:active { transform: translateY(8px); box-shadow: none; }
+
+        .btn-premium { background: #3498db; color: white; padding: 15px 30px; border-radius: 50px; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 5px 0 #2980b9; margin: 10px; }
+    </style>
+</head>
+<body onload="initApp()">
+
+    <div id="home" class="screen active" style="background: #0b1f3a;">
+        <h1 style="font-size: 55px; color: var(--gold); -webkit-text-stroke: 2px #000; margin: 0;">SONIC</h1>
+        <h1 style="font-size: 40px; margin-top: -10px;">SCHOOL</h1>
+        <div id="save-info" style="margin: 20px; font-size: 18px; color: #bdc3c7;"></div>
+        <button class="btn-premium" style="background:#2ecc71; box-shadow:0 5px 0 #27ae60;" onclick="showSelect()">NOUVELLE AVENTURE</button>
+        <button id="btn-continue" class="btn-premium" style="display:none;" onclick="continueGame()">CONTINUER</button>
+    </div>
+
+    <div id="char-select" class="screen" style="background: #1a1a1a;">
+        <h2 style="color: var(--gold);">CHOISIS TON CHAMPION</h2>
+        <div style="display:flex; gap:30px;">
+            <div onclick="startWith('sonic')" style="cursor:pointer; text-align:center;">
+                <img src="https://upload.wikimedia.org/wikipedia/en/5/5f/Sonic_the_Hedgehog.png" width="110">
+                <p>SONIC</p>
+            </div>
+            <div onclick="startWith('shadow')" style="cursor:pointer; text-align:center;">
+                <img src="https://upload.wikimedia.org/wikipedia/en/0/0c/Shadow_the_Hedgehog.png" width="110">
+                <p>SHADOW</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game" class="screen">
+        <div class="hud">
+            <div id="hearts">❤️❤️❤️</div>
+            <div id="ring-score" style="color: var(--gold);">🪙 0</div>
+        </div>
+
+        <div id="combo-badge">🔥 COMBO X2</div>
+        <img id="main-hero" src="" alt="Hero">
+        <div id="visual" style="font-size: 70px; margin: 20px; text-shadow: 3px 3px rgba(0,0,0,0.3);"></div>
+        <div id="options" class="options-grid"></div>
+
+        <div class="xp-container"><div id="xp-bar"></div></div>
+    </div>
+
+<script>
+    // --- ENGINE STATE ---
+    let score = 0, hearts = 3, streak = 0, selectedHero = 'sonic', currentAnswer = null;
+    let saveCooldown = false;
+    const heroImgs = {
+        sonic: 'https://upload.wikimedia.org/wikipedia/en/5/5f/Sonic_the_Hedgehog.png',
+        shadow: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Shadow_the_Hedgehog.png'
+    };
+
+    // --- INITIALISATION PRO ---
+    function initApp() {
+        const timestamp = localStorage.getItem('aziz_timestamp');
+        if (timestamp && (Date.now() - timestamp < 7 * 24 * 60 * 60 * 1000)) {
+            document.getElementById('btn-continue').style.display = 'block';
+            const s = localStorage.getItem('aziz_score') || 0;
+            document.getElementById('save-info').innerText = `Dernière partie : 🪙 ${s} Rings`;
+        }
+    }
+
+    function showSelect() {
+        document.getElementById('home').style.transform = "translateX(-100%)";
+        setTimeout(() => {
+            document.getElementById('home').classList.remove('active');
+            document.getElementById('char-select').classList.add('active');
+        }, 400);
+    }
+
+    function startWith(hero) {
+        selectedHero = hero; score = 0; hearts = 3; streak = 0;
+        launchGame();
+    }
+
+    function continueGame() {
+        score = Number(localStorage.getItem('aziz_score')) || 0;
+        hearts = Number(localStorage.getItem('aziz_hearts')) || 3;
+        streak = Number(localStorage.getItem('aziz_streak')) || 0;
+        selectedHero = localStorage.getItem('aziz_hero') || 'sonic';
+        launchGame();
+    }
+
+    function launchGame() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('game').classList.add('active');
+        document.getElementById('main-hero').src = heroImgs[selectedHero];
+        updateUI();
+        speak("C'est parti Aziz !");
+        nextQuestion();
+    }
+
+    // --- CORE LOOP (SAFE ENGINE) ---
+    function nextQuestion() {
+        updateUI();
+        const pool = score < 10 ? [alphabetGame] : [mathGame, alphabetGame];
+        const gameFunc = pool[Math.floor(Math.random() * pool.length)];
+
+        if (typeof gameFunc === "function") {
+            gameFunc();
+        } else {
+            alphabetGame(); // Fallback de sécurité
+        }
+    }
+
+    function updateUI() {
+        const game = document.getElementById('game');
+        const combo = document.getElementById('combo-badge');
+
+        // Zone Progression
+        game.classList.remove('zone-1', 'zone-2', 'zone-5');
+        let zoneClass = score < 15 ? 'zone-1' : (score < 40 ? 'zone-2' : 'zone-5');
+        game.classList.add(zoneClass);
+
+        // Stats
+        document.getElementById('ring-score').innerText = "🪙 " + score;
+        document.getElementById('hearts').innerText = "❤️".repeat(Math.max(0, hearts));
+
+        // XP Bar (Objectif 50 Rings)
+        document.getElementById('xp-bar').style.width = Math.min(100, (score / 50) * 100) + "%";
+
+        // Combo Feedback
+        if (streak >= 2) {
+            combo.innerText = `🔥 x${streak} COMBO !`;
+            combo.classList.add('combo-active');
+        } else {
+            combo.classList.remove('combo-active');
+        }
+    }
+
+    function checkAnswer(choice) {
+        const heroEl = document.getElementById('main-hero');
+        if (choice === currentAnswer) {
+            score++; streak++;
+            if (streak >= 3) score += 2; // Bonus Reward
+
+            heroEl.classList.add('jumping');
+            speak(streak > 2 ? "INCROYABLE !" : "BRAVO !");
+            saveProgress();
+
+            setTimeout(() => {
+                heroEl.classList.remove('jumping');
+                nextQuestion();
+            }, 700);
+        } else {
+            streak = 0; hearts--;
+            saveProgress();
+            if (hearts <= 0) {
+                speak("Game Over Aziz ! On se réentraîne ?");
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                speak("Oups ! Réessaie !");
+                updateUI();
+            }
+        }
+    }
+
+    // --- GAMES (RANDOMIZED OPTIONS) ---
+    function alphabetGame() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        currentAnswer = letters[Math.floor(Math.random() * 26)];
+
+        let options = [currentAnswer];
+        while (options.length < 4) {
+            const rand = letters[Math.floor(Math.random() * 26)];
+            if (!options.includes(rand)) options.push(rand);
+        }
+
+        document.getElementById('visual').innerText = currentAnswer;
+        renderOptions(options);
+    }
+
+    function mathGame() {
+        let a = Math.floor(Math.random() * 10), b = Math.floor(Math.random() * 5);
+        currentAnswer = a + b;
+        document.getElementById('visual').innerText = `${a} + ${b}`;
+
+        let options = [currentAnswer];
+        while (options.length < 4) {
+            const rand = Math.floor(Math.random() * 15);
+            if (!options.includes(rand)) options.push(rand);
+        }
+        renderOptions(options);
+    }
+
+    function renderOptions(opts) {
+        const container = document.getElementById('options');
+        container.innerHTML = '';
+        opts.sort(() => Math.random() - 0.5).forEach(o => {
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerText = o;
+            btn.onclick = () => checkAnswer(o);
+            container.appendChild(btn);
+        });
+    }
+
+    // --- PERSISTENCE PRO ---
+    function saveProgress() {
+        if (saveCooldown) return;
+        saveCooldown = true;
+        localStorage.setItem('aziz_score', score);
+        localStorage.setItem('aziz_hero', selectedHero);
+        localStorage.setItem('aziz_hearts', hearts);
+        localStorage.setItem('aziz_streak', streak);
+        localStorage.setItem('aziz_timestamp', Date.now());
+        setTimeout(() => saveCooldown = false, 1500); // Cooldown réduit pour réactivité
+    }
+
+    function speak(t) {
+        if (!window.speechSynthesis) return;
+        speechSynthesis.cancel();
+        const m = new SpeechSynthesisUtterance(t);
+        m.lang = "fr-FR"; m.rate = 1.1;
+        speechSynthesis.speak(m);
+    }
+</script>
+</body>
+</html>
